@@ -66,10 +66,53 @@ export async function getRecord(hash: string): Promise<{
   owner: string;
   timestamp: bigint;
   note: string;
+  revoked: boolean;
 }> {
   const contract = await getContract();
-  const [exists, owner, timestamp, note] = await contract.getRecord(hash);
-  return { exists, owner, timestamp, note };
+  const [exists, owner, timestamp, note, revoked] = await contract.getRecord(hash);
+  return { exists, owner, timestamp, note, revoked };
+}
+
+/**
+ * Revoke a hash (only owner can revoke)
+ */
+export async function revokeHash(hash: string): Promise<string> {
+  const contract = await getContract();
+  const tx = await contract.revokeHash(hash);
+  await tx.wait();
+  return tx.hash;
+}
+
+/**
+ * Check if a hash is already registered
+ */
+export async function isHashRegistered(hash: string): Promise<boolean> {
+  const record = await getRecord(hash);
+  return record.exists;
+}
+
+/**
+ * Get network status information
+ */
+export async function getNetworkStatus(): Promise<{
+  blockNumber: number;
+  gasPrice: string;
+  chainId: number;
+}> {
+  const provider = getProvider();
+  if (!provider) {
+    throw new Error('No provider available');
+  }
+
+  const blockNumber = await provider.getBlockNumber();
+  const feeData = await provider.getFeeData();
+  const network = await provider.getNetwork();
+  
+  return {
+    blockNumber,
+    gasPrice: feeData.gasPrice ? (Number(feeData.gasPrice) / 1e9).toFixed(2) + ' Gwei' : 'N/A',
+    chainId: Number(network.chainId),
+  };
 }
 
 /**

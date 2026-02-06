@@ -58,6 +58,8 @@ npm run deploy
 
 This deploys the `IntegrityRegistry` contract and writes the address to `frontend/src/config/contract.ts`.
 
+**Note**: If upgrading from a previous version, you MUST redeploy the contract to get the new revoke functionality.
+
 ### 5. Start Frontend
 
 Open a **new terminal**:
@@ -72,25 +74,90 @@ The app opens at `http://localhost:5173`
 ### 6. Use the dApp
 
 1. Click "Connect Wallet" and approve in MetaMask
-2. Register a file:
-   - Choose a file
-   - (Optional) Add a note/label
+2. Toggle dark/light mode using the theme switcher in the header
+3. Register a file:
+   - Drag & drop a file or click to browse
+   - View file metadata (size, type, modified date)
+   - Add an optional note/label
    - Click "Register on Blockchain"
    - Confirm the transaction in MetaMask
-3. Verify a file:
-   - Choose the same file or a modified version
+4. Verify a file:
+   - Drag & drop or select a file to verify
    - Click "Verify Integrity"
-   - View the result (unchanged or tampered)
-4. View Records: Click "View Recent Registrations" to see all registered hashes
+   - Download verification certificate if file matches
+5. Bulk verify multiple files:
+   - Click "Bulk" mode in Verify panel
+   - Drag & drop multiple files
+   - View results for all files at once
+6. Compare two files:
+   - Click "Compare" mode in Verify panel
+   - Select two files to check if they're identical
+7. View Records:
+   - Click "View Recent Registrations"
+   - Search by hash, owner, or note
+   - Filter by "My Records" or sort by date
+   - Export records as CSV or JSON
+   - Revoke your own hashes if needed
+
+## Feature Guide
+
+### Drag & Drop
+Simply drag files from your file explorer directly into the dashed boxes in Register or Verify panels. Works for single files and bulk verification.
+
+### Duplicate Detection 
+When registering, the app automatically checks if a hash already exists on the blockchain and warns you before allowing duplicate registration.
+
+### File Size Warnings
+- Files over 100MB trigger a warning that hashing may take time
+- Files over 500MB trigger a stronger warning
+- Progress indicator shows hashing progress for large files
+
+### Hash Revocation
+Owners can "soft delete" their registered hashes by revoking them. Revoked hashes remain on the blockchain but are marked as deprecated, useful for mistakes or outdated registrations.
+
+### Verification Certificate
+When a file successfully verifies, click "Download Certificate" to get a JSON file containing:
+- File hash and name
+- Owner address
+- Registration timestamp
+- Verification timestamp
+- Optional note
+
+### Network Status
+Real-time blockchain information displayed below the header when connected:
+- Current block number (updates every 5 seconds)
+- Gas price in Gwei
+- Chain ID
+
+### Search & Export
+In Recent Registrations:
+- Search across hashes, owner addresses, and notes
+- Filter to show only your registrations
+- Sort by newest or oldest first
+- Export filtered results as CSV or JSON for record keeping
 
 ## Features
 
 - **File Hash Registration**: Register SHA-256 hashes of files on the blockchain with optional notes
 - **Integrity Verification**: Verify if files have been tampered with by comparing their current hash with blockchain records
+- **Drag & Drop Interface**: Drag and drop files directly into register or verify areas for quick processing
+- **Bulk Verification**: Upload and verify multiple files simultaneously with results overview
+- **File Comparison**: Compare two files side-by-side to check if they are identical
+- **Download Certificates**: Generate and download verification certificates as JSON proofs
+- **Smart Duplicate Detection**: Warns when attempting to register an already-registered hash
+- **File Size Warnings**: Alerts for large files that may take longer to hash
+- **Hash Revocation**: Owners can revoke/deprecate previously registered hashes (soft delete)
+- **Search & Filter**: Search records by hash, owner, or note; filter by ownership and sort by date
+- **Export Records**: Export blockchain records as CSV or JSON for archiving
+- **Dark/Light Mode**: Toggle between dark and light themes with persistent preference
+- **Network Status**: Real-time display of block number, gas price, and chain ID
+- **File Metadata Display**: Shows file size, type, and last modified date
+- **Progress Indicators**: Visual feedback during hash computation for large files
+- **Enhanced Hash Visualization**: Full hash display with easy copy functionality
 - **Privacy-Focused**: Only cryptographic hashes are stored, never the actual file content
 - **Timestamp Proof**: Each registration includes an immutable timestamp proving file existence at a specific time
 - **Owner Tracking**: Track which Ethereum address registered each file hash
-- **Recent Activity**: View recent file registrations with collapsible interface
+- **Responsive UI**: Clean, modern interface that works on all device sizes
 
 ## Verification Results
 
@@ -138,11 +205,20 @@ The app opens at `http://localhost:5173`
 
 ## Tech Stack
 
-- **Smart Contract**: Solidity, Hardhat
-- **Frontend**: React, TypeScript, Vite, ethers.js v6
+- **Smart Contract**: Solidity 0.8.20, Hardhat
+- **Frontend**: React 18, TypeScript, Vite
+- **Blockchain Library**: ethers.js v6
 - **Local Chain**: Hardhat Network (EVM compatible)
 - **Wallet Integration**: MetaMask
 - **Cryptography**: Web Crypto API (SHA-256)
+- **Styling**: Custom CSS with dark/light mode support
+
+## Smart Contract Functions
+
+- `registerHash(bytes32 hash, string note)`: Register a new file hash with optional note
+- `getRecord(bytes32 hash)`: Retrieve registration details for a hash
+- `revokeHash(bytes32 hash)`: Revoke a hash (only by owner)
+- Events: `HashRegistered`, `HashRevoked` for blockchain indexing
 
 ## Use Cases
 

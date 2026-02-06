@@ -12,6 +12,7 @@ contract IntegrityRegistry {
         uint64 timestamp;
         string note;
         bool exists;
+        bool revoked;
     }
 
     // Mapping from file hash to record
@@ -22,6 +23,12 @@ contract IntegrityRegistry {
         bytes32 indexed hash,
         uint64 timestamp,
         string note
+    );
+
+    event HashRevoked(
+        address indexed owner,
+        bytes32 indexed hash,
+        uint64 timestamp
     );
 
     /**
@@ -38,10 +45,26 @@ contract IntegrityRegistry {
             owner: msg.sender,
             timestamp: uint64(block.timestamp),
             note: note,
-            exists: true
+            exists: true,
+            revoked: false
         });
 
         emit HashRegistered(msg.sender, hash, uint64(block.timestamp), note);
+    }
+
+    /**
+     * @notice Revoke a previously registered hash (only by owner)
+     * @param hash The file hash to revoke
+     */
+    function revokeHash(bytes32 hash) external {
+        require(hash != bytes32(0), "Hash cannot be zero");
+        require(records[hash].exists, "Hash not registered");
+        require(records[hash].owner == msg.sender, "Only owner can revoke");
+        require(!records[hash].revoked, "Hash already revoked");
+
+        records[hash].revoked = true;
+
+        emit HashRevoked(msg.sender, hash, uint64(block.timestamp));
     }
 
     /**
@@ -51,6 +74,7 @@ contract IntegrityRegistry {
      * @return owner The address that registered the hash
      * @return timestamp When the hash was registered (Unix timestamp)
      * @return note The note/label attached to the hash
+     * @return revoked Whether the hash has been revoked
      */
     function getRecord(bytes32 hash)
         external
@@ -59,10 +83,11 @@ contract IntegrityRegistry {
             bool exists,
             address owner,
             uint64 timestamp,
-            string memory note
+            string memory note,
+            bool revoked
         )
     {
         Record memory record = records[hash];
-        return (record.exists, record.owner, record.timestamp, record.note);
+        return (record.exists, record.owner, record.timestamp, record.note, record.revoked);
     }
 }
