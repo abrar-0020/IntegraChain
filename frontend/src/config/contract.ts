@@ -3,8 +3,8 @@
 // environment variables in the Vercel project dashboard.
 // For local development these values are auto-updated by `npm run deploy`.
 export const CONTRACT_ADDRESS: string =
-  import.meta.env.VITE_CONTRACT_ADDRESS ?? "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+  import.meta.env.VITE_CONTRACT_ADDRESS ?? "0x8097361B90f0259d131f79E117D6dFEF1A424Ae1";
 
 export const CHAIN_ID: number = Number(
-  import.meta.env.VITE_CHAIN_ID ?? 31337
+  import.meta.env.VITE_CHAIN_ID ?? 11155111
 );
