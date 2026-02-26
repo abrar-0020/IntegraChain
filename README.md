@@ -2,6 +2,8 @@
 
 A decentralized application (dApp) for registering and verifying file integrity using Ethereum smart contracts. IntegraChain ensures data authenticity by storing cryptographic hashes on the blockchain, enabling tamper-proof verification of file integrity.
 
+Live demo: https://integrachain.vercel.app
+
 Files are hashed client-side using SHA-256, and only the hash along with metadata (owner, timestamp, optional note) is stored on-chain. This approach maintains privacy while providing verifiable proof of file existence and integrity.
 
 ## Prerequisites
