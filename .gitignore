@@ -15,6 +15,7 @@ typechain-types/
 # Environment variables
 .env
 .env.local
+contracts/.env
 
 # IDE
 .vscode/

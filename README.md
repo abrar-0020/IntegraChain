@@ -99,67 +99,75 @@ The app opens at `http://localhost:5173`
    - Export records as CSV or JSON
    - Revoke your own hashes if needed
 
-## Deploying to Vercel
+## Deploying to Vercel (Sepolia Testnet)
 
-The frontend is a static Vite/React app and deploys to Vercel in minutes. The smart contract must first be deployed to a public network (e.g. Sepolia testnet), then the frontend is pointed at it via environment variables.
+This is the recommended production deployment path. The smart contract lives on Sepolia and the frontend is hosted on Vercel.
 
-### 1. Deploy the Smart Contract to a Testnet
+### 1. Get a Sepolia RPC URL
 
-Add your testnet RPC URL and deployer private key to `contracts/.env`:
+Create a free account on [Infura](https://infura.io) or [Alchemy](https://alchemy.com) and create a new project targeting the **Sepolia** network. Copy the HTTPS endpoint.
 
+### 2. Get Sepolia ETH
+
+Add Sepolia to MetaMask (or use the existing Sepolia preset), then visit a faucet:
+- [sepoliafaucet.com](https://sepoliafaucet.com)
+- [faucet.sepolia.dev](https://faucet.sepolia.dev)
+
+### 3. Configure the Deployer Environment
+
+```bash
+cd contracts
+cp .env.example .env
 ```
-SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_KEY
-PRIVATE_KEY=0xYOUR_PRIVATE_KEY
+
+Edit `contracts/.env`:
+
+```env
+SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_PROJECT_ID
+PRIVATE_KEY=0xYOUR_DEPLOYER_PRIVATE_KEY
 ```
 
-Update `contracts/hardhat.config.ts` to include the Sepolia network, then run:
+> **Never commit `.env`.** It is already in `.gitignore`.
+
+### 4. Deploy the Contract to Sepolia
 
 ```bash
 cd contracts
 npm install
-npx hardhat run scripts/deploy.ts --network sepolia
+npm run deploy:sepolia
 ```
 
-Note the deployed contract address printed in the output.
+The script will print the deployed contract address and display the environment variables you need for Vercel:
 
-### 2. Configure Environment Variables on Vercel
+```
+✅ IntegrityRegistry deployed to: 0xAbCd...
+📋 Next steps:
+   Set these in your Vercel project → Settings → Environment Variables:
+   VITE_CONTRACT_ADDRESS=0xAbCd...
+   VITE_CHAIN_ID=11155111
+```
+
+### 5. Deploy the Frontend to Vercel
+
+```bash
+npm i -g vercel   # install once
+vercel            # from the repo root
+```
+
+Or connect your GitHub repo in the Vercel dashboard for automatic deploys on every push to `main`.
+
+### 6. Set Environment Variables on Vercel
 
 In your Vercel project → **Settings → Environment Variables**, add:
 
 | Variable | Value |
 |---|---|
-| `VITE_CONTRACT_ADDRESS` | Your deployed contract address (e.g. `0xAbc...`) |
-| `VITE_CHAIN_ID` | `11155111` for Sepolia, `1` for mainnet |
+| `VITE_CONTRACT_ADDRESS` | The address printed by the deploy script |
+| `VITE_CHAIN_ID` | `11155111` |
 
-### 3. Deploy via Vercel CLI (Recommended)
+Trigger a redeploy after saving the variables (Vercel → Deployments → Redeploy).
 
-```bash
-# Install Vercel CLI once
-npm i -g vercel
-
-# From the repo root
-vercel
-
-# Follow the prompts – Vercel auto-detects the vite rootDirectory from vercel.json
-```
-
-Or connect your GitHub repository in the Vercel dashboard and every push to `main` will trigger an automatic re-deploy.
-
-### 4. Build Details
-
-`vercel.json` in the repo root tells Vercel to:
-- Use `frontend/` as the project root
-- Run `npm run build` (`tsc && vite build`)
-- Serve the output from `frontend/dist/`
-
-No additional configuration is required.
-
-### Connecting MetaMask to a Testnet
-
-1. Open MetaMask → Networks → Add Network
-2. Select **Sepolia** (or use Infura/Alchemy for a custom RPC)
-3. Get testnet ETH from a Sepolia faucet (e.g. `sepoliafaucet.com`)
-4. Transactions on testnets cost testnet ETH (free), not real money
+> **Want to run locally instead?** Follow the [Quick Start](#quick-start) section — it uses Hardhat's local network, no RPC key required.
 
 ## Feature Guide
 
@@ -255,15 +263,23 @@ In Recent Registrations:
 
 ## Troubleshooting
 
-**"Wrong network" error**: Switch MetaMask to Localhost 8545 network (Chain ID: 31337)
+**"Wrong network" error (local)**: Switch MetaMask to Localhost 8545 (Chain ID: 31337)
 
-**"Contract not deployed"**: Run `npm run deploy` in the contracts directory to deploy the smart contract
+**"Wrong network" error (Vercel)**: Switch MetaMask to **Sepolia** testnet (Chain ID: 11155111)
 
-**MetaMask shows 0 ETH**: Ensure you imported the Hardhat test account using the private key from the chain output
+**"Contract not deployed" (local)**: Run `npm run deploy` in the `contracts/` directory
+
+**"Contract not deployed" (Sepolia)**: Run `npm run deploy:sepolia` and make sure `SEPOLIA_RPC_URL` and `PRIVATE_KEY` are set in `contracts/.env`
+
+**MetaMask shows 0 ETH on Sepolia**: Get free Sepolia ETH from [sepoliafaucet.com](https://sepoliafaucet.com)
+
+**MetaMask shows 0 ETH locally**: Ensure you imported the Hardhat test account using the private key from the `npm run chain` output
+
+**Vercel build fails**: Check that `VITE_CONTRACT_ADDRESS` and `VITE_CHAIN_ID` are set in Vercel → Settings → Environment Variables, then redeploy
 
 **Port already in use**: Change the port in `frontend/vite.config.ts` or terminate the process using port 5173
 
-**Node.js version warning**: Hardhat officially supports Node.js 18-22. If you encounter issues with Node.js 25.x, consider downgrading
+**Node.js version warning**: Hardhat officially supports Node.js 18-22. If you encounter issues with newer Node.js versions, consider downgrading
 
 ## Tech Stack
 
