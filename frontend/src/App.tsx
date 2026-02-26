@@ -6,6 +6,7 @@ import RecordsPanel from './components/RecordsPanel';
 import NetworkStatus from './components/NetworkStatus';
 import Toast from './components/Toast';
 import { connectWallet, getProvider } from './lib/eth';
+import { CHAIN_ID } from './config/contract';
 
 export interface ToastMessage {
   id: number;
@@ -88,6 +89,14 @@ function App() {
     }
   };
 
+  const handleDisconnect = () => {
+    setWalletConnected(false);
+    setAddress('');
+    setChainId(null);
+    setShowRecords(false);
+    addToast('success', 'Disconnected', 'Wallet disconnected');
+  };
+
   const addToast = (type: ToastMessage['type'], title: string, message: string) => {
     const id = Date.now();
     setToasts((prev) => [...prev, { id, type, title, message }]);
@@ -126,10 +135,11 @@ function App() {
                 address={address}
                 chainId={chainId}
                 onConnect={handleConnect}
+                onDisconnect={handleDisconnect}
               />
             </div>
           </div>
-          {walletConnected && chainId === 31337 && <NetworkStatus />}
+          {walletConnected && chainId === CHAIN_ID && <NetworkStatus />}
         </header>
 
         {!walletConnected ? (
@@ -142,17 +152,14 @@ function App() {
               Connect Wallet
             </button>
           </div>
-        ) : chainId !== 31337 ? (
+        ) : chainId !== CHAIN_ID ? (
           <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
             <h2 style={{ marginBottom: '1rem', color: 'var(--error)' }}>Wrong Network</h2>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-              Please switch to Localhost 8545 (Chain ID: 31337) in MetaMask to use this application
+              Please switch to {CHAIN_ID === 11155111 ? 'Sepolia testnet' : `chain ${CHAIN_ID}`} in MetaMask to use this application
             </p>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-              Current Chain ID: {chainId}
-            </p>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginTop: '1rem' }}>
-              Tip: Make sure you have started the local Hardhat blockchain node and deployed the contract
+              Current Chain ID: {chainId} — Required: {CHAIN_ID}
             </p>
           </div>
         ) : (
