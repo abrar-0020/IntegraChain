@@ -99,6 +99,68 @@ The app opens at `http://localhost:5173`
    - Export records as CSV or JSON
    - Revoke your own hashes if needed
 
+## Deploying to Vercel
+
+The frontend is a static Vite/React app and deploys to Vercel in minutes. The smart contract must first be deployed to a public network (e.g. Sepolia testnet), then the frontend is pointed at it via environment variables.
+
+### 1. Deploy the Smart Contract to a Testnet
+
+Add your testnet RPC URL and deployer private key to `contracts/.env`:
+
+```
+SEPOLIA_RPC_URL=https://sepolia.infura.io/v3/YOUR_KEY
+PRIVATE_KEY=0xYOUR_PRIVATE_KEY
+```
+
+Update `contracts/hardhat.config.ts` to include the Sepolia network, then run:
+
+```bash
+cd contracts
+npm install
+npx hardhat run scripts/deploy.ts --network sepolia
+```
+
+Note the deployed contract address printed in the output.
+
+### 2. Configure Environment Variables on Vercel
+
+In your Vercel project → **Settings → Environment Variables**, add:
+
+| Variable | Value |
+|---|---|
+| `VITE_CONTRACT_ADDRESS` | Your deployed contract address (e.g. `0xAbc...`) |
+| `VITE_CHAIN_ID` | `11155111` for Sepolia, `1` for mainnet |
+
+### 3. Deploy via Vercel CLI (Recommended)
+
+```bash
+# Install Vercel CLI once
+npm i -g vercel
+
+# From the repo root
+vercel
+
+# Follow the prompts – Vercel auto-detects the vite rootDirectory from vercel.json
+```
+
+Or connect your GitHub repository in the Vercel dashboard and every push to `main` will trigger an automatic re-deploy.
+
+### 4. Build Details
+
+`vercel.json` in the repo root tells Vercel to:
+- Use `frontend/` as the project root
+- Run `npm run build` (`tsc && vite build`)
+- Serve the output from `frontend/dist/`
+
+No additional configuration is required.
+
+### Connecting MetaMask to a Testnet
+
+1. Open MetaMask → Networks → Add Network
+2. Select **Sepolia** (or use Infura/Alchemy for a custom RPC)
+3. Get testnet ETH from a Sepolia faucet (e.g. `sepoliafaucet.com`)
+4. Transactions on testnets cost testnet ETH (free), not real money
+
 ## Feature Guide
 
 ### Drag & Drop
@@ -212,6 +274,7 @@ In Recent Registrations:
 - **Wallet Integration**: MetaMask
 - **Cryptography**: Web Crypto API (SHA-256)
 - **Styling**: Custom CSS with dark/light mode support
+- **Hosting**: Vercel (static frontend deployment)
 
 ## Smart Contract Functions
 
@@ -230,11 +293,12 @@ In Recent Registrations:
 
 ## Important Notes
 
-- This is a local development prototype. The blockchain resets when you stop `npm run chain`
-- For persistent testing, use Hardhat's `--hostname 0.0.0.0` flag and keep the node running
-- In production, deploy to a testnet (Sepolia, Goerli) or mainnet for permanent storage
-- Files are NEVER uploaded - only cryptographic hashes are stored on-chain
-- Each registration costs gas fees (free on local network, requires ETH on public networks)
+- The local Hardhat blockchain resets every time you stop `npm run chain` — all registrations are lost
+- For persistence during local testing, keep the Hardhat node running and do not restart it
+- The Vercel deployment connects to whichever network you set via `VITE_CONTRACT_ADDRESS` / `VITE_CHAIN_ID`
+- For a permanent public deployment, deploy the contract to Sepolia testnet or Ethereum mainnet
+- Files are **never** uploaded — only their SHA-256 hash is stored on-chain
+- Each registration writes to the blockchain and costs gas (free on local/testnet, real ETH on mainnet)
 
 ## Contributing
 

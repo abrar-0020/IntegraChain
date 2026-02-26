@@ -107,7 +107,7 @@ export default function RegisterPanel({ onSuccess, onToast }: RegisterPanelProps
 
     try {
       const bytes32Hash = hexToBytes32(hashHex);
-      const txHash = await registerHash(bytes32Hash, note);
+      await registerHash(bytes32Hash, note);
       onToast('success', 'Registered', `File hash registered successfully`);
       
       // Reset form

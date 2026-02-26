@@ -1,5 +1,5 @@
 import { BrowserProvider, Contract, EventLog } from 'ethers';
-import { CONTRACT_ADDRESS, CHAIN_ID } from '../config/contract';
+import { CONTRACT_ADDRESS } from '../config/contract';
 import { CONTRACT_ABI } from '../config/abi';
 
 declare global {
