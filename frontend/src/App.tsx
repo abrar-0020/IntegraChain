@@ -5,7 +5,7 @@ import VerifyPanel from './components/VerifyPanel';
 import RecordsPanel from './components/RecordsPanel';
 import NetworkStatus from './components/NetworkStatus';
 import Toast from './components/Toast';
-import { connectWallet, getProvider } from './lib/eth';
+import { connectWallet, getProvider, getLiveChainId } from './lib/eth';
 import { CHAIN_ID } from './config/contract';
 
 export interface ToastMessage {
@@ -30,7 +30,10 @@ function App() {
     checkConnection();
     if (window.ethereum) {
       window.ethereum.on('accountsChanged', handleAccountsChanged);
-      window.ethereum.on('chainChanged', () => window.location.reload());
+      // chainChanged fires with a hex chainId string on mobile MetaMask
+      window.ethereum.on('chainChanged', (chainIdHex: string) => {
+        setChainId(parseInt(chainIdHex, 16));
+      });
     }
     return () => {
       if (window.ethereum) {
@@ -52,9 +55,9 @@ function App() {
       if (accounts.length > 0) {
         const signer = await provider.getSigner();
         const addr = await signer.getAddress();
-        const network = await provider.getNetwork();
+        const chainId = await getLiveChainId();
         setAddress(addr);
-        setChainId(Number(network.chainId));
+        setChainId(chainId);
         setWalletConnected(true);
       }
     } catch (error) {

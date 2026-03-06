@@ -17,6 +17,16 @@ export function getProvider(): BrowserProvider | null {
 }
 
 /**
+ * Get the live chain ID directly via RPC — avoids ethers v6 network cache
+ * which causes wrong-network false positives on mobile MetaMask.
+ */
+export async function getLiveChainId(): Promise<number> {
+  if (!window.ethereum) return 0;
+  const hex: string = await window.ethereum.request({ method: 'eth_chainId' });
+  return parseInt(hex, 16);
+}
+
+/**
  * Connect to MetaMask wallet
  */
 export async function connectWallet(): Promise<{ address: string; chainId: number }> {
@@ -26,11 +36,10 @@ export async function connectWallet(): Promise<{ address: string; chainId: numbe
 
   const provider = new BrowserProvider(window.ethereum);
   await provider.send('eth_requestAccounts', []);
-  
+
   const signer = await provider.getSigner();
   const address = await signer.getAddress();
-  const network = await provider.getNetwork();
-  const chainId = Number(network.chainId);
+  const chainId = await getLiveChainId();
 
   return { address, chainId };
 }
