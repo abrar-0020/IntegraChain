@@ -45,6 +45,44 @@ export async function connectWallet(): Promise<{ address: string; chainId: numbe
 }
 
 /**
+ * Switch to Sepolia (or add it if not in wallet).
+ * Safe to call on mobile MetaMask — shows a one-tap confirmation.
+ */
+export async function switchToSepolia(): Promise<void> {
+  if (!window.ethereum) return;
+  const SEPOLIA_CHAIN_ID = '0xaa36a7'; // 11155111
+  try {
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: SEPOLIA_CHAIN_ID }],
+    });
+  } catch (err: any) {
+    // Error code 4902 = chain not added yet — add it
+    if (err.code === 4902 || err?.data?.originalError?.code === 4902) {
+      await window.ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: SEPOLIA_CHAIN_ID,
+          chainName: 'Sepolia Testnet',
+          nativeCurrency: { name: 'SepoliaETH', symbol: 'ETH', decimals: 18 },
+          rpcUrls: ['https://rpc.sepolia.org', 'https://ethereum-sepolia-rpc.publicnode.com'],
+          blockExplorerUrls: ['https://sepolia.etherscan.io'],
+        }],
+      });
+    } else {
+      throw err;
+    }
+  }
+}
+
+/**
+ * Returns true when running inside the MetaMask mobile in-app browser.
+ */
+export function isMetaMaskMobile(): boolean {
+  return !!window.ethereum?.isMetaMask && /mobile|android|iphone|ipad/i.test(navigator.userAgent);
+}
+
+/**
  * Get the IntegrityRegistry contract instance
  */
 export async function getContract(): Promise<Contract> {

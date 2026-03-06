@@ -5,7 +5,7 @@ import VerifyPanel from './components/VerifyPanel';
 import RecordsPanel from './components/RecordsPanel';
 import NetworkStatus from './components/NetworkStatus';
 import Toast from './components/Toast';
-import { connectWallet, getProvider, getLiveChainId } from './lib/eth';
+import { connectWallet, getProvider, getLiveChainId, switchToSepolia, isMetaMaskMobile } from './lib/eth';
 import { CHAIN_ID } from './config/contract';
 
 export interface ToastMessage {
@@ -27,7 +27,14 @@ function App() {
   useEffect(() => {
     const savedMode = localStorage.getItem('darkMode');
     setDarkMode(savedMode !== 'false');
-    checkConnection();
+
+    // In MetaMask mobile browser: auto-connect then auto-switch to Sepolia
+    if (isMetaMaskMobile()) {
+      autoConnectMobile();
+    } else {
+      checkConnection();
+    }
+
     if (window.ethereum) {
       window.ethereum.on('accountsChanged', handleAccountsChanged);
       // chainChanged fires with a hex chainId string on mobile MetaMask
@@ -46,6 +53,26 @@ function App() {
     document.body.className = darkMode ? 'dark-mode' : 'light-mode';
     localStorage.setItem('darkMode', darkMode.toString());
   }, [darkMode]);
+
+  const autoConnectMobile = async () => {
+    try {
+      // Step 1: request accounts — MetaMask shows one permission popup
+      const result = await connectWallet();
+      setAddress(result.address);
+      setWalletConnected(true);
+
+      // Step 2: if wrong network, switch to Sepolia — one more tap for user
+      let currentChainId = result.chainId;
+      if (currentChainId !== CHAIN_ID) {
+        await switchToSepolia();
+        currentChainId = await getLiveChainId();
+      }
+      setChainId(currentChainId);
+    } catch (error: any) {
+      // User rejected — fall back to manual connect flow
+      checkConnection();
+    }
+  };
 
   const checkConnection = async () => {
     try {
