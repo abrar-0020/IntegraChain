@@ -742,19 +742,20 @@ html {
 }
 
 .nav-logo-icon {
-  font-size: 1.6rem;
-  line-height: 1;
+  font-size: 2rem;
+  line-height: 1.3;
 }
 
 .nav-logo-text {
-  font-size: 1.6rem;
+  font-size: 2rem;
   font-weight: 900;
   background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: -0.03em;
-  line-height: 1;
+  line-height: 1.3;
+  padding-bottom: 0.1em;
 }
 
 .nav-links {
