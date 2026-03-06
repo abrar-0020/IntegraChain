@@ -704,6 +704,7 @@ html {
   display: flex;
   align-items: center;
   gap: 2rem;
+  justify-content: flex-start;
 }
 
 .nav-logo {
@@ -716,21 +717,23 @@ html {
   padding: 0;
   flex-shrink: 0;
   text-decoration: none;
+  margin-right: auto;
 }
 
 .nav-logo-icon {
-  font-size: 1.35rem;
+  font-size: 2.6rem;
   line-height: 1;
 }
 
 .nav-logo-text {
-  font-size: 1.5rem;
-  font-weight: 800;
+  font-size: 2.6rem;
+  font-weight: 900;
   background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
+  line-height: 1;
 }
 
 .nav-links {
