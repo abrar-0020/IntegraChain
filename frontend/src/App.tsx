@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, NavLink, Link } from 'react-router-dom';
 import WalletStatus from './components/WalletStatus';
-import RegisterPanel from './components/RegisterPanel';
-import VerifyPanel from './components/VerifyPanel';
-import RecordsPanel from './components/RecordsPanel';
 import NetworkStatus from './components/NetworkStatus';
 import Toast from './components/Toast';
+import ScrollToTop from './components/ScrollToTop';
+import HomePage from './pages/HomePage';
+import VerifyPage from './pages/VerifyPage';
+import RegistrationPage from './pages/RegistrationPage';
+import AboutPage from './pages/AboutPage';
 import { connectWallet, getProvider, getLiveChainId, switchToSepolia, isMetaMaskMobile } from './lib/eth';
 import { CHAIN_ID } from './config/contract';
 
@@ -13,6 +16,15 @@ export interface ToastMessage {
   type: 'success' | 'error' | 'warning';
   title: string;
   message: string;
+}
+
+export interface WalletProps {
+  walletConnected: boolean;
+  address: string;
+  chainId: number | null;
+  requiredChainId: number;
+  addToast: (type: ToastMessage['type'], title: string, message: string) => void;
+  onConnect: () => void;
 }
 
 function App() {
@@ -28,7 +40,6 @@ function App() {
     const savedMode = localStorage.getItem('darkMode');
     setDarkMode(savedMode !== 'false');
 
-    // In MetaMask mobile browser: auto-connect then auto-switch to Sepolia
     if (isMetaMaskMobile()) {
       autoConnectMobile();
     } else {
@@ -37,7 +48,6 @@ function App() {
 
     if (window.ethereum) {
       window.ethereum.on('accountsChanged', handleAccountsChanged);
-      // chainChanged fires with a hex chainId string on mobile MetaMask
       window.ethereum.on('chainChanged', (chainIdHex: string) => {
         setChainId(parseInt(chainIdHex, 16));
       });
@@ -56,20 +66,16 @@ function App() {
 
   const autoConnectMobile = async () => {
     try {
-      // Step 1: request accounts — MetaMask shows one permission popup
       const result = await connectWallet();
       setAddress(result.address);
       setWalletConnected(true);
-
-      // Step 2: if wrong network, switch to Sepolia — one more tap for user
       let currentChainId = result.chainId;
       if (currentChainId !== CHAIN_ID) {
         await switchToSepolia();
         currentChainId = await getLiveChainId();
       }
       setChainId(currentChainId);
-    } catch (error: any) {
-      // User rejected — fall back to manual connect flow
+    } catch {
       checkConnection();
     }
   };
@@ -82,9 +88,9 @@ function App() {
       if (accounts.length > 0) {
         const signer = await provider.getSigner();
         const addr = await signer.getAddress();
-        const chainId = await getLiveChainId();
+        const currentChainId = await getLiveChainId();
         setAddress(addr);
-        setChainId(chainId);
+        setChainId(currentChainId);
         setWalletConnected(true);
       }
     } catch (error) {
@@ -131,32 +137,42 @@ function App() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const triggerRefresh = () => {
-    setRefreshTrigger((prev) => prev + 1);
-  };
+  const triggerRefresh = () => setRefreshTrigger((prev) => prev + 1);
 
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-    setMobileMenuOpen(false);
+  const walletProps: WalletProps = {
+    walletConnected,
+    address,
+    chainId,
+    requiredChainId: CHAIN_ID,
+    addToast,
+    onConnect: handleConnect,
   };
-
-  const isReady = walletConnected && chainId === CHAIN_ID;
 
   return (
-    <>
+    <BrowserRouter>
+      <ScrollToTop />
+
       {/* ── SITE HEADER ── */}
       <header className="site-header">
         <div className="nav-container">
-          <button className="nav-logo" onClick={() => scrollTo('home')}>
+          <Link to="/" className="nav-logo">
             <span className="nav-logo-icon">⛓</span>
             <span className="nav-logo-text">IntegraChain</span>
-          </button>
+          </Link>
 
           <nav className={`nav-links${mobileMenuOpen ? ' nav-links--open' : ''}`}>
-            <button className="nav-link" onClick={() => scrollTo('home')}>Home</button>
-            <button className="nav-link" onClick={() => scrollTo('verify')}>Verify</button>
-            <button className="nav-link" onClick={() => scrollTo('registration')}>Registration</button>
-            <button className="nav-link" onClick={() => scrollTo('about')}>About</button>
+            <NavLink to="/" end className={({ isActive }) => `nav-link${isActive ? ' nav-link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>
+              Home
+            </NavLink>
+            <NavLink to="/verify" className={({ isActive }) => `nav-link${isActive ? ' nav-link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>
+              Verify
+            </NavLink>
+            <NavLink to="/registration" className={({ isActive }) => `nav-link${isActive ? ' nav-link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>
+              Registration
+            </NavLink>
+            <NavLink to="/about" className={({ isActive }) => `nav-link${isActive ? ' nav-link--active' : ''}`} onClick={() => setMobileMenuOpen(false)}>
+              About
+            </NavLink>
           </nav>
 
           <div className="nav-actions">
@@ -187,148 +203,16 @@ function App() {
       </header>
 
       <main className="site-main">
-        {/* ── HOME / REGISTER ── */}
-        <section id="home" className="site-section">
-          <div className="section-container">
-            <div className="hero">
-              <div className="hero-badge">Blockchain-Powered Integrity</div>
-              <h1 className="hero-title">
-                Secure Your Files with{' '}
-                <span className="hero-accent">Immutable</span> Blockchain Records
-              </h1>
-              <p className="hero-subtitle">
-                IntegraChain lets you register and verify file integrity using the Ethereum
-                blockchain. Every hash is permanently recorded on-chain — tamper-proof and
-                publicly auditable.
-              </p>
-              {!walletConnected && (
-                <div className="hero-cta">
-                  <button className="btn btn-primary btn-lg" onClick={handleConnect}>
-                    Connect Wallet to Get Started
-                  </button>
-                  <button className="btn btn-outline btn-lg" onClick={() => scrollTo('about')}>
-                    Learn More
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {!walletConnected ? (
-              <div className="connect-banner card">
-                <div className="connect-banner-icon">🔐</div>
-                <h2>Connect Your Wallet</h2>
-                <p>Connect your MetaMask wallet to register files on the blockchain.</p>
-                <button className="btn btn-primary" onClick={handleConnect}>
-                  Connect MetaMask
-                </button>
-              </div>
-            ) : chainId !== CHAIN_ID ? (
-              <div className="connect-banner card error-banner">
-                <div className="connect-banner-icon">⚠️</div>
-                <h2 style={{ color: 'var(--error)' }}>Wrong Network</h2>
-                <p>
-                  Please switch to{' '}
-                  {CHAIN_ID === 11155111 ? 'Sepolia testnet' : `chain ${CHAIN_ID}`} in MetaMask.
-                </p>
-                <p className="text-muted">
-                  Current: {chainId} — Required: {CHAIN_ID}
-                </p>
-              </div>
-            ) : (
-              <div className="register-wrapper">
-                <RegisterPanel onSuccess={triggerRefresh} onToast={addToast} />
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* ── VERIFY ── */}
-        <section id="verify" className="site-section section-alt">
-          <div className="section-container">
-            <div className="section-header">
-              <span className="section-badge">Verification</span>
-              <h2 className="section-title">Verify File Integrity</h2>
-              <p className="section-description">
-                Upload any file to check if its hash has been registered on the blockchain.
-                Instantly confirm authenticity and view ownership details.
-              </p>
-            </div>
-            {isReady ? (
-              <VerifyPanel onToast={addToast} />
-            ) : (
-              <div className="card section-locked">
-                <p>Connect your wallet and switch to the correct network to verify files.</p>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* ── REGISTRATION RECORDS ── */}
-        <section id="registration" className="site-section">
-          <div className="section-container">
-            <div className="section-header">
-              <span className="section-badge">On-Chain Records</span>
-              <h2 className="section-title">Registration History</h2>
-              <p className="section-description">
-                Browse, search, and export all file hash registrations recorded on the blockchain.
-              </p>
-            </div>
-            {isReady ? (
-              <RecordsPanel refreshTrigger={refreshTrigger} onToast={addToast} />
-            ) : (
-              <div className="card section-locked">
-                <p>Connect your wallet to view registration records.</p>
-              </div>
-            )}
-          </div>
-        </section>
-
-        {/* ── ABOUT ── */}
-        <section id="about" className="site-section section-alt">
-          <div className="section-container">
-            <div className="section-header">
-              <span className="section-badge">About</span>
-              <h2 className="section-title">How IntegraChain Works</h2>
-              <p className="section-description">
-                A decentralized file integrity registry built on Ethereum.
-              </p>
-            </div>
-            <div className="about-grid">
-              <div className="about-card card">
-                <div className="about-card-icon">🔒</div>
-                <h3>Register</h3>
-                <p>
-                  Upload any file and its SHA-256 hash is computed locally in your browser.
-                  The hash — never the file itself — is stored on-chain via a smart contract.
-                </p>
-              </div>
-              <div className="about-card card">
-                <div className="about-card-icon">✅</div>
-                <h3>Verify</h3>
-                <p>
-                  Upload a file at any time to regenerate its hash and check it against the
-                  blockchain. Instantly know if a file is authentic and unmodified.
-                </p>
-              </div>
-              <div className="about-card card">
-                <div className="about-card-icon">🌐</div>
-                <h3>Immutable</h3>
-                <p>
-                  Records are stored on Ethereum — decentralized, tamper-proof, and publicly
-                  auditable. No central authority controls the data.
-                </p>
-              </div>
-              <div className="about-card card">
-                <div className="about-card-icon">🔑</div>
-                <h3>Own Your Data</h3>
-                <p>
-                  Your wallet address is the owner of every hash you register. Only your
-                  private key can revoke a record.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+        <Routes>
+          <Route path="/" element={
+            <HomePage {...walletProps} triggerRefresh={triggerRefresh} />
+          } />
+          <Route path="/verify" element={<VerifyPage {...walletProps} />} />
+          <Route path="/registration" element={
+            <RegistrationPage {...walletProps} refreshTrigger={refreshTrigger} />
+          } />
+          <Route path="/about" element={<AboutPage />} />
+        </Routes>
       </main>
 
       {/* ── FOOTER ── */}
@@ -342,10 +226,10 @@ function App() {
           <div className="footer-links">
             <div className="footer-col">
               <h4>Navigation</h4>
-              <button className="footer-link" onClick={() => scrollTo('home')}>Home</button>
-              <button className="footer-link" onClick={() => scrollTo('verify')}>Verify</button>
-              <button className="footer-link" onClick={() => scrollTo('registration')}>Registration</button>
-              <button className="footer-link" onClick={() => scrollTo('about')}>About</button>
+              <Link to="/" className="footer-link">Home</Link>
+              <Link to="/verify" className="footer-link">Verify</Link>
+              <Link to="/registration" className="footer-link">Registration</Link>
+              <Link to="/about" className="footer-link">About</Link>
             </div>
             <div className="footer-col">
               <h4>Technology</h4>
@@ -362,7 +246,7 @@ function App() {
       </footer>
 
       <Toast toasts={toasts} onRemove={removeToast} />
-    </>
+    </BrowserRouter>
   );
 }
 

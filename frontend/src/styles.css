@@ -782,6 +782,12 @@ html {
   background-color: var(--bg-tertiary);
 }
 
+.nav-link--active {
+  color: var(--text-primary) !important;
+  background-color: var(--bg-tertiary);
+  border-bottom: 2px solid var(--accent);
+}
+
 .nav-actions {
   display: flex;
   align-items: center;
@@ -1144,6 +1150,8 @@ html {
   text-align: left;
   transition: color 0.2s;
   font-family: inherit;
+  text-decoration: none;
+  display: block;
 }
 
 .footer-link:hover {
