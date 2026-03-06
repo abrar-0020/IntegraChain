@@ -24,8 +24,9 @@ export default function WalletStatus({
 }: WalletStatusProps) {
   if (!connected) {
     return (
-      <button className="btn btn-primary" onClick={onConnect}>
-        Connect Wallet
+      <button className="btn btn-primary btn-connect-wallet" onClick={onConnect}>
+        <span className="btn-connect-long">Connect Wallet</span>
+        <span className="btn-connect-short">Connect</span>
       </button>
     );
   }

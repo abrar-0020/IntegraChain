@@ -90,6 +90,26 @@ button {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-wrap: nowrap;
+}
+
+/* Long/short connect button label toggle */
+.btn-connect-short {
+  display: none;
+}
+
+.btn-connect-long {
+  display: inline;
+}
+
+@media (max-width: 600px) {
+  .btn-connect-short {
+    display: inline;
+  }
+
+  .btn-connect-long {
+    display: none;
+  }
 }
 
 .btn-disconnect {
@@ -789,10 +809,18 @@ html {
     justify-content: center;
   }
 
+  .nav-logo-icon {
+    font-size: 1.75rem;
+  }
+
+  .nav-logo-text {
+    font-size: 1.75rem;
+  }
+
   .nav-links {
     display: none;
     position: absolute;
-    top: 64px;
+    top: 100%;
     left: 0;
     right: 0;
     flex-direction: column;
@@ -802,6 +830,7 @@ html {
     padding: 0.5rem 1rem 1rem;
     gap: 0.25rem;
     z-index: 99;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.25);
   }
 
   .nav-links--open {
@@ -811,6 +840,29 @@ html {
   .nav-link {
     text-align: left;
     padding: 0.75rem 1rem;
+    font-size: 1rem;
+  }
+
+  /* Hide wallet label+address text, keep badge + button */
+  .wallet-info {
+    display: none;
+  }
+
+  .nav-actions {
+    gap: 0.5rem;
+  }
+
+  .theme-toggle {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.9rem;
+  }
+
+  /* Network status scrollable on mobile */
+  .network-status {
+    overflow-x: auto;
+    gap: 1rem;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -1114,10 +1166,98 @@ html {
   width: 100%;
 }
 
+/* ══════════════════════════════════════
+   MOBILE — ≤ 600px
+══════════════════════════════════════ */
 @media (max-width: 600px) {
+  /* Nav */
+  .nav-container {
+    padding: 0.4rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .nav-logo-icon {
+    font-size: 1.5rem;
+  }
+
+  .nav-logo-text {
+    font-size: 1.5rem;
+  }
+
+  /* Sections */
+  .site-section {
+    padding: 2.5rem 0;
+    scroll-margin-top: 56px;
+  }
+
+  .section-container {
+    padding: 0 1rem;
+  }
+
+  .section-header {
+    margin-bottom: 2rem;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+  }
+
+  .section-description {
+    font-size: 0.9rem;
+  }
+
+  /* Hero */
+  .hero {
+    margin-bottom: 2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 0.95rem;
+  }
+
+  .hero-cta {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .btn-lg {
+    width: 100%;
+    max-width: 320px;
+    text-align: center;
+  }
+
+  /* Cards */
+  .card {
+    padding: 1.25rem 1rem;
+  }
+
+  .connect-banner {
+    padding: 2rem 1rem;
+  }
+
+  /* Records filters stack */
+  .record-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Toast full-width */
+  .toast-container {
+    left: 0.75rem;
+    right: 0.75rem;
+    max-width: none;
+  }
+
+  /* About grid 1 col */
+  .about-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Footer */
   .footer-container {
     flex-direction: column;
     gap: 2rem;
+    padding: 0 1rem 2rem;
   }
 
   .footer-links {
@@ -1125,11 +1265,57 @@ html {
     gap: 2rem;
   }
 
-  .section-title {
-    font-size: 1.5rem;
+  /* Wallet disconnect button text smaller */
+  .btn-disconnect {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
   }
 
-  .site-section {
-    padding: 3rem 0;
+  /* File dropzone */
+  .file-dropzone {
+    padding: 1.25rem 1rem;
+  }
+
+  /* Inputs full width stacked */
+  .input {
+    font-size: 1rem; /* prevent iOS zoom */
+  }
+}
+
+/* ══════════════════════════════════════
+   SMALL PHONES — ≤ 420px
+══════════════════════════════════════ */
+@media (max-width: 420px) {
+  .nav-logo-icon {
+    display: none; /* hide chain emoji, keep text */
+  }
+
+  .nav-logo-text {
+    font-size: 1.35rem;
+  }
+
+  .status-badge {
+    display: none; /* hide network badge in header on tiny screens */
+  }
+
+  .hero-title {
+    font-size: 1.75rem;
+  }
+
+  .section-title {
+    font-size: 1.3rem;
+  }
+
+  .btn-lg {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+  }
+
+  .about-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 1rem;
   }
 }
